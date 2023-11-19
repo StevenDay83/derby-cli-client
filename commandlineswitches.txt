@@ -1,0 +1,52 @@
+derby-cli - Commandline file transfer utility for the derby storage protocol
+
+Usage: derby-cli [mode] [options...]
+derby-cli --download --descriptor-input {descriptor file | nostr:naddr1} [options...]
+derby-cli --upload --input [filename] --secret-key [key] --storage-nodes [server1,...,serverN] [options...] 
+--descriptor-output [filename]
+
+--upload                        Set mode to upload. Used to upload files to the derby storage nodes
+
+Upload Options:
+
+--input <filename>                  File to upload
+--secret-key <key>                  64-character hex secret key for signing upload pointers
+--storage-nodes <server list>       Storage nodes to upload file to. (i.e. ws://server1,wss://server2)            
+--block-size-bytes                  Maximum size to break file data into for upload (default is 512000)
+--mime-type                         Optional. Set mime-type on data descriptor
+--dfilename                         Set suggested filename label in data descriptor.
+--descriptor-output                 File to save data generated data descriptor. Use 'stdout' to print
+                                    output.
+
+--download                      Set mode to download. Used to retrieve files from derby storage notes
+                                based on data descriptor information
+
+Download Options:
+
+--descriptor-input                  Data descriptor input. Will read from a file unless 'nostr:' prefix is used.
+                                    For 'nostr:' prefixes, cli will read from an naddr1 bech-32 string and pull 
+                                    a descriptor from Nostr.
+--filename-output                   Optional. Override file label in data descriptor. If none is specified the merkelroot 
+                                    hash will be used.
+--display-info                      Retrieves and shows data descriptor information in human readable format. If
+                                    --filename-out is specified, this will be ignored.
+
+--nostr                         Set mode to Nostr. Use to convert to and from a data descriptor and Nostr Event 
+                                and to publish a data descriptor to Nostr.
+
+Nostr Options:
+
+--to-event                          Sets Nostr sub-mode to convert a data descriptor to a Nostr event.
+--descriptor-input                      Data descriptor input. Will read from a specified file.
+--nostr-key                             Nostr secret key. Used to sign a new Nostr event. Currently only accepted
+                                        in hex format.
+--event-file-output                     Event output. Will save to a file or standard output if 'stdout' is specified.
+--publish-to-relays                     Nostr relays to publish event to. (i.e. wss://relay.damus.io,wss://wbc.nostr1.com).
+                                        Note: A Nostr Address (naddr1) will be displayed after publishing.
+--test-run                              Will simulate publishing to Nostr relay. This will display a Nostr Address (naddr1).
+
+--from-event                        Sets Nostr sub-mode to convert a Nostr event to a data descriptor.
+--descriptor-output                     File to save converted data descriptor. Use 'stdout' to print output.
+--naddr                                 Nostr address in bech-32 format (i.e. naddr1...) to retrieve Nostr
+                                        event data descriptor.
+--event-file-input                      Load file with event data. Use if not pulling event fron naddress.
