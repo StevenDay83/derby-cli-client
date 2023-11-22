@@ -87,10 +87,10 @@ try {
 
                                                         let dataDescriptorJSON = newDataDescriptor.generateDataDescriptorJSON();
 
-                                                        if (descriptorOutput){
+                                                        if (descriptorOutput != 'stdout'){
                                                             Logger.WriteLog("Saving data descriptor to " + descriptorOutput);
                                                             fs.writeFileSync(descriptorOutput, JSON.stringify(dataDescriptorJSON, undefined, 4));
-                                                        } else if (descriptorOutput == 'stdout') {
+                                                        } else {
                                                             console.log(JSON.stringify(dataDescriptorJSON, undefined, 4));
                                                         }
 
@@ -138,7 +138,7 @@ try {
 
         if (dataDescriptorFilename.toLowerCase().startsWith('nostr:')) {
             // Nostr
-            nAddressURI = dataDescriptorFilename.toLowerCase().split(':');
+            let nAddressURI = dataDescriptorFilename.toLowerCase().split(':');
 
             if (nAddressURI.length == 2) {
                 nAddress = nAddressURI[1];
@@ -161,6 +161,8 @@ try {
                 });
 
                 // process.exit(0);
+            } else {
+                throw new Error("Invalid Nostr Address");
             }
             // process.exit(0);
         } else {
@@ -339,6 +341,58 @@ try {
 
             // process.exit(0);
         }
+    } else if (CommandLineMode.mode == "remove"){
+        const fs = require('fs');
+        console.log(CommandLineMode);
+
+        Logger.WriteLog("Removal mode selected");
+        let isNostrAddress = false;
+        let dataDescriptorFilename = CommandLineMode.descriptorin;
+        let nAddress;
+        let dataDescriptorFileData;
+        let newDataDescriptor;
+
+        if (dataDescriptorFilename.toLowerCase().startsWith('nostr:')){
+            // Grab nostr event
+            // Proceed with removal process
+            // Remove Event if removal is set up
+            let nAddressURI = dataDescriptorFilename.toLowerCase().split(':');
+
+            if (nAddressURI.length == 2) {
+
+                isNostrAddress = true;
+                nAddress = nAddressURI[1];
+
+                Logger.WriteLog("Reading data descriptor from Nostr address " + nAddress);
+
+                NostrDescriptorClient.getNostrDescriptorByNAddress(nAddress, (err, newEvent) => {
+                    if (!err) {
+                        let newDataDescriptor = DerbyTools.NostrDescriptor.importDescriptorFromEvent(newEvent);
+
+                        removeFromDataDescriptor(newDataDescriptor, () => {
+
+                        });
+
+                    } else {
+                        throw err;
+                    }
+
+                });
+            } else {
+                throw new Error("Invalid Nostr Address");
+            }
+
+        } else {
+            Logger.WriteLog("Reading data descriptor from file " + dataDescriptorFilename);
+
+            let dataDescriptorFileData = fs.readFileSync(dataDescriptorFilename);
+            newDataDescriptor = new DerbyTools.DataDescriptor();
+            newDataDescriptor.importDescriptor(JSON.parse(dataDescriptorFileData));
+
+            removeFromDataDescriptor(newDataDescriptor, () => {
+
+            });
+        }
     }
     else if (CommandLineMode.mode == "help"){
         const fs = require('fs');
@@ -390,6 +444,14 @@ function displayDescriptorInfo(newDescriptor) {
         console.log("Average Block Size: " + AverageBlockSize);
         console.log("Total Storage Node List:\n" + storageNodeListString);
     }
+}
+
+function removeFromDataDescriptor(newDataDescriptor, callback){
+    Logger.WriteLog("Removal not implemented yet");
+    // Will piggy back on Transfer Manager Download Manager for Deletion OR make its own class
+    setTimeout(() => {
+        process.exit(0);
+    }, 1000);
 }
 
 function downloadFromDataDescriptor(newDataDescriptor, filenameLabel){

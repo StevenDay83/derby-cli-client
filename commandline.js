@@ -15,6 +15,9 @@ function readCommandLineAttributes(commandLineArray) {
                 case '--nostr':
                     cliConfiguration["mode"] = "nostr";
                     break;
+                case '--remove':
+                    cliConfiguration["mode"] = "remove"
+                    break;
                 case '--help':
                     cliConfiguration["mode"] = "help";
                     break;  
@@ -236,6 +239,47 @@ function readCommandLineAttributes(commandLineArray) {
                         throw new Error('Descriptor/Event flow not specified');
                     }
                     console.log(JSON.stringify(cliConfiguration, undefined, 4));
+                    break;
+                }
+                case "remove":{
+                    let attributeMap = {};
+
+                    // --descriptor-input
+                    // --remove-descriptor $FILE or nostr:naddr1
+                    // --secret-key
+                    // --nostr-key
+
+                    attributeMap["descriptorin"] = commandLineArray.indexOf('--descriptor-input');
+                    attributeMap["secretkey"] = commandLineArray.indexOf('--secret-key');
+                    attributeMap["nostrkey"] = commandLineArray.indexOf('--nostr-key');
+                    attributeMap["removedescriptor"] = commandLineArray.indexOf('--delete-descriptor');
+
+                    let elementList = Object.values(attributeMap);
+
+                    if (attributeMap["descriptorin"] != -1 && attributeMap["descriptorin"] < commandLineArray.length - 1 &&
+                        elementList.indexOf(attributeMap["descriptorin"] + 1) == -1){
+                            cliConfiguration["descriptorin"] = commandLineArray[attributeMap["descriptorin"] + 1];
+                        } else {
+                            throw new Error("No descriptor input specified");
+                        }
+
+                    if (attributeMap["removedescriptor"] != -1){
+                        // Delete descriptor json from disk or removal from nostr
+                        cliConfiguration["removedescriptor"] = true;
+                    }
+
+                    if (attributeMap["secretkey"] != -1 && attributeMap["secretkey"] < commandLineArray.length - 1) {
+                        if (elementList.indexOf(attributeMap["secretkey"] + 1) == -1){
+                            cliConfiguration["secretkey"] = commandLineArray[attributeMap["secretkey"] + 1];
+                        }
+                    } else {
+                        throw new Error("No secret key specified");
+                    }
+
+                    if (attributeMap["nostrkey"] != -1 && attributeMap["nostrkey"] < commandLineArray.length - 1 &&
+                        elementList.indexOf(attributeMap["nostrkey"] + 1) == -1){
+                            cliConfiguration["nostrkey"] = commandLineArray[attributeMap["nostrkey"] + 1];
+                        } // Don't perform nostr key check here. 
                     break;
                 }
                 default:
