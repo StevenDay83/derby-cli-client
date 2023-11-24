@@ -18,6 +18,9 @@ function readCommandLineAttributes(commandLineArray) {
                 case '--remove':
                     cliConfiguration["mode"] = "remove"
                     break;
+                case "--network-keys":
+                    cliConfiguration["mode"] = "networkkeys";
+                    break;
                 case '--help':
                     cliConfiguration["mode"] = "help";
                     break;  
@@ -280,6 +283,69 @@ function readCommandLineAttributes(commandLineArray) {
                         elementList.indexOf(attributeMap["nostrkey"] + 1) == -1){
                             cliConfiguration["nostrkey"] = commandLineArray[attributeMap["nostrkey"] + 1];
                         } // Don't perform nostr key check here. 
+                    break;
+                }
+                case "networkkeys": {
+                    // --generate-keys
+                    // --get-public-key
+                    // --get-hex-key
+                    // --get-derby-key
+                    // --get-derby-secret
+
+                    let attributeMap = {};
+
+                    attributeMap["generatekeys"] = commandLineArray.indexOf('--generate-keys');
+                    attributeMap["getpublickey"] = commandLineArray.indexOf('--get-derby-key-from-dsec');
+                    attributeMap["gethexkey"] = commandLineArray.indexOf('--get-hex-key');
+                    attributeMap["getderbykey"] = commandLineArray.indexOf('--get-derby-key-from-hex');
+                    attributeMap["getderbysecret"] = commandLineArray.indexOf('--get-derby-secret-from-hex');
+
+                    let elementList = Object.values(attributeMap);
+
+                    if (attributeMap["generatekeys"] != -1){
+                        cliConfiguration["generatekeys"] = true;
+                    }
+
+                    if (attributeMap["getpublickey"] != -1 ){
+                        if (attributeMap["getpublickey"] < commandLineArray.length - 1) {
+                            if (elementList.indexOf(attributeMap["getpublickey"] + 1) == -1){
+                                cliConfiguration["getpublickey"] = commandLineArray[attributeMap["getpublickey"] + 1];
+                            }
+                        } else {
+                            throw new Error("No secret key specified");
+                        }
+                    } 
+
+                    if (attributeMap["gethexkey"] != -1) {
+                        if (attributeMap["gethexkey"] < commandLineArray.length - 1) {
+                            if (elementList.indexOf(attributeMap["gethexkey"] + 1) == -1){
+                                cliConfiguration["gethexkey"] = commandLineArray[attributeMap["gethexkey"] + 1];
+                            }
+                        } else {
+                            throw new Error("No network key specified");
+                        }
+                    }
+
+                    if (attributeMap["getderbykey"] != -1){
+                        if (attributeMap["getderbykey"] < commandLineArray.length - 1) {
+                            if (elementList.indexOf(attributeMap["getderbykey"] + 1) == -1){
+                                cliConfiguration["getderbykey"] = commandLineArray[attributeMap["getderbykey"] + 1];
+                            }
+                        } else {
+                            throw new Error("No hex key specified");
+                        }
+                    }
+
+                    if (attributeMap["getderbysecret"] != -1) {
+                        if (attributeMap["getderbysecret"] != -1 && attributeMap["getderbysecret"] < commandLineArray.length - 1) {
+                            if (elementList.indexOf(attributeMap["getderbysecret"] + 1) == -1){
+                                cliConfiguration["getderbysecret"] = commandLineArray[attributeMap["getderbysecret"] + 1];
+                            }
+                        } else {
+                            throw new Error("No hex key specified");
+                        }
+                    }
+
                     break;
                 }
                 default:

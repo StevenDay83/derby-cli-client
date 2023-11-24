@@ -38,7 +38,8 @@ try {
         const fs = require('fs');
 
         let inputFile = CommandLineMode.input;
-        let secretKey = CommandLineMode.secretkey;
+        let secretKey = DerbyTools.Bech32Code.isEncodedPrivateKey(CommandLineMode.secretkey) ? 
+        DerbyTools.Bech32Code.decodeNetworkPrivateKey(CommandLineMode.secretkey) : CommandLineMode.secretkey;
         let blocksize = CommandLineMode.blocksize;
         let descriptorOutput = CommandLineMode.descriptorout
         let fileLabel = CommandLineMode.dfilename;
@@ -393,6 +394,92 @@ try {
 
             });
         }
+    } else if (CommandLineMode.mode == "networkkeys"){
+        if (CommandLineMode.generatekeys) {
+            Logger.WriteLog("Generating Key Pair\n");
+            Logger.WriteLog("NOTE: Please save this key pair in a safe place");
+            Logger.WriteLog("Your Public Key will be your identity on storage nodes and can be distributed");
+            Logger.WriteLog("Your Private Key will be used for uploading and managing data. DO NOT SHARE THIS KEY");
+
+            let newPrivateHexKey = DerbyTools.PointerTools.generatePrivateKey();
+            let newPublicHexKey = DerbyTools.PointerTools.getPublicKey(newPrivateHexKey);
+
+            let derbyNetworkKey = DerbyTools.Bech32Code.encodeNetworkPublicKey(newPublicHexKey);
+            let derbySecretKey = DerbyTools.Bech32Code.encodeNetworkPrivateKey(newPrivateHexKey);
+
+            Logger.WriteLog("\nNew Network Key Pair");
+            Logger.WriteLog("Public Key: " + derbyNetworkKey);
+            Logger.WriteLog("Private Key: " + derbySecretKey);
+
+            process.exit(0);
+        } else if (CommandLineMode.getpublickey) {
+            let dsecKey = CommandLineMode.getpublickey;
+
+            try {
+                if (DerbyTools.Bech32Code.isEncodedPrivateKey(dsecKey)){
+                    let privateKeyHex = DerbyTools.Bech32Code.decodeNetworkPrivateKey(dsecKey);
+                    let publicKeyHex = DerbyTools.PointerTools.getPublicKey(privateKeyHex);
+                    let derby1Key = DerbyTools.Bech32Code.encodeNetworkPublicKey(publicKeyHex);
+    
+                    Logger.WriteLog("Derived Public Network Key: " + derby1Key);
+    
+                    process.exit(0)
+                } else {
+                    throw new Error("Invalid dsec key");
+                }
+            } catch (e) {
+                throw e;
+            }
+        } else if (CommandLineMode.gethexkey) {
+            let thisBechString = CommandLineMode.gethexkey;
+            let decodedHexString;
+
+            try {
+                if (DerbyTools.Bech32Code.isEncodedPublicKey(thisBechString)){
+                    decodedHexString = DerbyTools.Bech32Code.decodeNetworkPublicKey(thisBechString);
+                } else if (DerbyTools.Bech32Code.isEncodedPrivateKey(thisBechString)){
+                    decodedHexString = DerbyTools.Bech32Code.decodeNetworkPrivateKey(thisBechString);
+                } else {
+                    throw new Error("Invalid key format");
+                }
+
+                Logger.WriteLog("Hex format: " + decodedHexString);
+                process.exit(0);
+            } catch (e) {
+                throw e;
+            }
+        } else if (CommandLineMode.getderbykey || CommandLineMode.getderbysecret) {
+            let hexString;
+            let derbyKey;
+
+            try {
+                if (CommandLineMode.getderbykey){
+                    if (CommandLineMode.getderbykey.length == 64) {
+                        Logger.WriteLog("Getting Derby Public Key");
+                        hexString = CommandLineMode.getderbykey;
+
+                        derbyKey = DerbyTools.Bech32Code.encodeNetworkPublicKey(hexString);
+                    } else {
+                        throw new Error("Invalid hex key");
+                    }
+                } else {
+                    if (CommandLineMode.getderbysecret.length == 64) {
+                        Logger.WriteLog("Getting Derby Private Key");
+                        hexString = CommandLineMode.getderbysecret;
+
+                        derbyKey = DerbyTools.Bech32Code.encodeNetworkPrivateKey(hexString);
+                    } else {
+                        throw new Error("Invalid hex key");
+                    }
+                }
+
+                Logger.WriteLog("Network Key: " + derbyKey);
+                process.exit(0);
+            } catch (e) {
+                throw e;
+            }
+
+        }
     }
     else if (CommandLineMode.mode == "help"){
         const fs = require('fs');
@@ -404,6 +491,7 @@ try {
 
 } catch (e) {
     console.error(e);
+    process.exit(1);
 }
 
 function displayDescriptorInfo(newDescriptor) {
@@ -449,6 +537,18 @@ function displayDescriptorInfo(newDescriptor) {
 function removeFromDataDescriptor(newDataDescriptor, callback){
     Logger.WriteLog("Removal not implemented yet");
     // Will piggy back on Transfer Manager Download Manager for Deletion OR make its own class
+
+    // try {
+    //     if (newDataDescriptor){
+    //         // Steps
+    //         // Step 1 Collect pointer IDs from all blocks
+    //         // Step 2 Connect to each Relay and submit a pointer deletion
+    //         // Step 3 Send a callback with 
+    //     }
+    // } catch (e) {
+    //     callback(e);
+    // }
+
     setTimeout(() => {
         process.exit(0);
     }, 1000);
