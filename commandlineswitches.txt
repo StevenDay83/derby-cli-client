@@ -9,9 +9,9 @@ derby-cli --upload --input [filename] --secret-key [key] --storage-nodes [server
 
 Upload Options:
 
---input <filename>                  File to upload
---secret-key <key>                  64-character hex secret key for signing upload pointers
---storage-nodes <server list>       Storage nodes to upload file to. (i.e. ws://server1,wss://server2)            
+--input                             File to upload
+--secret-key                        64-character hex secret key for signing upload pointers
+--storage-nodes                     Storage nodes to upload file to. (i.e. ws://server1,wss://server2)            
 --block-size-bytes                  Maximum size to break file data into for upload (default is 512000)
 --mime-type                         Optional. Set mime-type on data descriptor
 --dfilename                         Set suggested filename label in data descriptor.
@@ -50,3 +50,14 @@ Nostr Options:
 --naddr                                 Nostr address in bech-32 format (i.e. naddr1...) to retrieve Nostr
                                         event data descriptor.
 --event-file-input                      Load file with event data. Use if not pulling event fron naddress.
+
+--network-keys                  Derby network key management mode.
+
+Key Management Options:
+
+--generate-keys                     Generates a random new public\private key pair to use for interacting with
+                                    storage nodes. The key pair will be displayed in a Bech-32m format.
+--get-derby-key-from-dsec           Provides derby public key based on provided dsec private key.
+--get-hex-key                       Provides raw hex key from derby public key or dsec private key.
+--get-derby-key-from-hex            Converts raw hex key into Bech-32m derby public key format.
+--get-derby-secret-from-hex         Converts raw hex key into Bech-32m dsec private key format.
