@@ -36,6 +36,8 @@ function readCommandLineAttributes(commandLineArray) {
                 case "upload": {
                     let attributeMap = {};
 
+                    //cliConfiguration["ignoressl"] = true;
+                    attributeMap["ignoressl"] = commandLineArray.indexOf('--ignore-ssl-errors');
                     attributeMap["input"] = commandLineArray.indexOf('--input');
                     attributeMap["secretkey"] = commandLineArray.indexOf('--secret-key');
                     attributeMap["storageNodes"] = commandLineArray.indexOf('--storage-nodes');
@@ -45,6 +47,10 @@ function readCommandLineAttributes(commandLineArray) {
                     attributeMap["descriptorout"] = commandLineArray.indexOf('--descriptor-output');
 
                     let elementList = Object.values(attributeMap);
+
+                    if (attributeMap["ignoressl"] != -1){
+                        cliConfiguration["ignoressl"] = true;
+                    }
 
                     if (attributeMap["input"] != -1 && attributeMap["input"] < commandLineArray.length - 1) {
                         if (elementList.indexOf(attributeMap["input"] + 1) == -1){
@@ -126,12 +132,17 @@ function readCommandLineAttributes(commandLineArray) {
                     // --filename-out
                     let attributeMap = {};
                     
+                    attributeMap["ignoressl"] = commandLineArray.indexOf('--ignore-ssl-errors');
                     attributeMap["descriptorin"] = commandLineArray.indexOf('--descriptor-input');
                     // attributeMap["naddr"] = commandLineArray.indexOf('--naddr');
                     attributeMap["filenameout"] = commandLineArray.indexOf('--filename-output');
                     attributeMap["getinfo"] = commandLineArray.indexOf('--display-info');
                     
                     let elementList = Object.values(attributeMap);
+
+                    if (attributeMap["ignoressl"] != -1){
+                        cliConfiguration["ignoressl"] = true;
+                    }
 
                     if (attributeMap["descriptorin"] != -1 && (attributeMap["descriptorin"] < commandLineArray.length - 1) &&
                         (elementList.indexOf(attributeMap["descriptorin"] + 1) == -1)) {
@@ -168,6 +179,8 @@ function readCommandLineAttributes(commandLineArray) {
 
                     let attributeMap = {};
                     
+                    attributeMap["ignoressl"] = commandLineArray.indexOf('--ignore-ssl-errors');
+
                     attributeMap["toevent"] = commandLineArray.indexOf('--to-event');
                     attributeMap["testrun"] = commandLineArray.indexOf('--test-run');
                     attributeMap["descriptorin"] = commandLineArray.indexOf('--descriptor-input');
@@ -181,6 +194,10 @@ function readCommandLineAttributes(commandLineArray) {
                     attributeMap["eventfilein"] = commandLineArray.indexOf('--event-file-input');
                     
                     let elementList = Object.values(attributeMap);
+
+                    if (attributeMap["ignoressl"] != -1){
+                        cliConfiguration["ignoressl"] = true;
+                    }
 
                     if (attributeMap["toevent"] != -1) {
                         cliConfiguration["eventflow"] = "toevent";
@@ -252,12 +269,17 @@ function readCommandLineAttributes(commandLineArray) {
                     // --secret-key
                     // --nostr-key
 
+                    attributeMap["ignoressl"] = commandLineArray.indexOf('--ignore-ssl-errors');
                     attributeMap["descriptorin"] = commandLineArray.indexOf('--descriptor-input');
                     attributeMap["secretkey"] = commandLineArray.indexOf('--secret-key');
                     attributeMap["nostrkey"] = commandLineArray.indexOf('--nostr-key');
                     attributeMap["removedescriptor"] = commandLineArray.indexOf('--delete-descriptor');
 
                     let elementList = Object.values(attributeMap);
+
+                    if (attributeMap["ignoressl"] != -1){
+                        cliConfiguration["ignoressl"] = true;
+                    }
 
                     if (attributeMap["descriptorin"] != -1 && attributeMap["descriptorin"] < commandLineArray.length - 1 &&
                         elementList.indexOf(attributeMap["descriptorin"] + 1) == -1){

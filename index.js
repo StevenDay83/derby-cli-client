@@ -17,9 +17,11 @@ try {
     CommandLineMode = CommandLineTools.readCommandLineAttributes(process.argv);
 
     if (!CommandLineMode){
-        if (CommandLineMode.mode == "upload"){
+
+
+        // if (CommandLineMode.mode == "upload"){
             throw new Error("Invalid mode");
-        }
+        // }
     }
 } catch (e) {
     console.error(e);
@@ -33,6 +35,10 @@ try {
 }
 
 try {
+    if (CommandLineMode.ignoressl){
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+    }
+    
     if (CommandLineMode.mode == "upload"){
         Logger.WriteLog("Upload Mode Selected");
         const fs = require('fs');
@@ -72,18 +78,30 @@ try {
                                 // callback(undefined, thisMessageManager.relayClient.relayURL, pointerId, pHash, lastRelayForBlock, lastRelay); 
                                 UploadTransfer.importDataChunksList(dataChunksArray);
                                     let blockCounter = 0;
+                                    let relayBlockCounter = {};
                                     UploadTransfer.uploadFileData((err, uploadedRelayURL, uploadedPointerId, 
                                         uploadedPointerHash, isLastBlockRelay, isLastRelay) => {
                                             let percentage = 0;
                                             if (!err){
-                                                if (isLastBlockRelay){
-                                                    blockCounter++;
-                                                    percentage = Math.ceil((blockCounter / dataChunksArray.length) * 100);
+                                                // if (!isLastBlockRelay){
+                                                    // relayBlockCounter[uploadedRelayURL] = relayBlockCounter[uploadedRelayURL] == undefined ? 
+                                                    // 1 : relayBlockCounter[uploadedRelayURL]++;
 
-                                                    Logger.WriteLog("Published pointer " + uploadedPointerId, Logger.DEBUG);
-                                                    Logger.WriteLog("Upload Progress " + percentage + "% (" + blockCounter + 
-                                                    " blocks of " + dataChunksArray.length + ")")
-                                                    if (isLastRelay) {
+                                                    if (relayBlockCounter[uploadedRelayURL] == undefined){
+                                                        relayBlockCounter[uploadedRelayURL] = 1;
+                                                    } else {
+                                                        relayBlockCounter[uploadedRelayURL] += 1;
+                                                    }
+
+                                                    blockCounter++;
+                                                    percentage = Math.ceil((relayBlockCounter[uploadedRelayURL] / dataChunksArray.length) * 100);
+
+                                                    Logger.WriteLog('Node - ' + uploadedRelayURL + ': ' + "Published pointer " + uploadedPointerId, Logger.DEBUG);
+                                                    Logger.WriteLog('Node - ' + uploadedRelayURL + ': ' + "Upload Progress " + percentage + "% (" + relayBlockCounter[uploadedRelayURL] + 
+                                                    " blocks of " + dataChunksArray.length + ")");
+                                                    // Logger.WriteLog('Node - ' + uploadedRelayURL + ': ' + "Upload Progress " + percentage + "% (" + blockCounter + 
+                                                    // " blocks of " + dataChunksArray.length + ")");
+                                                    if (isLastBlockRelay && isLastRelay) {
                                                         Logger.WriteLog("Upload completed");
 
                                                         let dataDescriptorJSON = newDataDescriptor.generateDataDescriptorJSON();
@@ -100,9 +118,17 @@ try {
                                                             process.exit(0);
                                                         }, 1000);
                                                     }
-                                                }
+                                                // }
                                             } else {
-                                                throw (err);
+                                                if (isLastBlockRelay && isLastRelay){
+                                                    setTimeout(() => {
+                                                        process.exit(1);
+                                                    }, 100);
+                                                }
+                                                Logger.WriteLog('Node - ' + uploadedRelayURL + ': ' + err.message);
+                                                // Logger.WriteLog("Aborting upload");
+                                                // process.exit(1);
+                                                // throw (err);
                                             }
                                         });
 
@@ -566,7 +592,7 @@ function downloadFromDataDescriptor(newDataDescriptor, filenameLabel){
         Logger.WriteLog("File output overridden");
     }
 
-    if (!filenameLabel){
+    if (!filenameLabel || filenameLabel.toLowerCase().startsWith("nostr:")){
         filenameLabel = newDataDescriptor.merkelRoot + ".file";
     }
 

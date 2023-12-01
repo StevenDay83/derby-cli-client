@@ -5,6 +5,8 @@ derby-cli --download --descriptor-input {descriptor file | nostr:naddr1} [option
 derby-cli --upload --input [filename] --secret-key [key] --storage-nodes [server1,...,serverN] [options...] 
 --descriptor-output [filename]
 
+--ignore-ssl-errors             Ignore SSL validation issues. Applies to all connections. Not recommended!
+
 --upload                        Set mode to upload. Used to upload files to the derby storage nodes
 
 Upload Options:
