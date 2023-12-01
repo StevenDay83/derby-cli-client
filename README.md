@@ -5,19 +5,20 @@ Derby storage network command-line client
 ```
 derby-cli - Commandline file transfer utility for the derby storage protocol
 
-Usage: node index.js [mode] [options...]
-node index.js --download --descriptor-input {descriptor file | nostr:naddr1} [options...]
-node index.js --upload --input [filename] --secret-key [key] --storage-nodes [server1,...,serverN] [options...] 
+Usage: derby-cli [mode] [options...]
+derby-cli --download --descriptor-input {descriptor file | nostr:naddr1} [options...]
+derby-cli --upload --input [filename] --secret-key [key] --storage-nodes [server1,...,serverN] [options...] 
 --descriptor-output [filename]
-node index.js --nostr {--to-event | --from-event} [options...]
+
+--ignore-ssl-errors             Ignore SSL validation issues. Applies to all connections. Not recommended!
 
 --upload                        Set mode to upload. Used to upload files to the derby storage nodes
 
 Upload Options:
 
---input <filename>                  File to upload
---secret-key <key>                  64-character hex secret key for signing upload pointers
---storage-nodes <server list>       Storage nodes to upload file to. (i.e. ws://server1,wss://server2)            
+--input                             File to upload
+--secret-key                        64-character hex secret key for signing upload pointers
+--storage-nodes                     Storage nodes to upload file to. (i.e. ws://server1,wss://server2)            
 --block-size-bytes                  Maximum size to break file data into for upload (default is 512000)
 --mime-type                         Optional. Set mime-type on data descriptor
 --dfilename                         Set suggested filename label in data descriptor.
@@ -52,13 +53,21 @@ Nostr Options:
 --test-run                              Will simulate publishing to Nostr relay. This will display a Nostr Address (naddr1).
 
 --from-event                        Sets Nostr sub-mode to convert a Nostr event to a data descriptor.
-
 --descriptor-output                     File to save converted data descriptor. Use 'stdout' to print output.
-`
 --naddr                                 Nostr address in bech-32 format (i.e. naddr1...) to retrieve Nostr
                                         event data descriptor.
 --event-file-input                      Load file with event data. Use if not pulling event fron naddress.
 
+--network-keys                  Derby network key management mode.
+
+Key Management Options:
+
+--generate-keys                     Generates a random new public\private key pair to use for interacting with
+                                    storage nodes. The key pair will be displayed in a Bech-32m format.
+--get-derby-key-from-dsec           Provides derby public key based on provided dsec private key.
+--get-hex-key                       Provides raw hex key from derby public key or dsec private key.
+--get-derby-key-from-hex            Converts raw hex key into Bech-32m derby public key format.
+--get-derby-secret-from-hex         Converts raw hex key into Bech-32m dsec private key format.
 ```
 
 ## Quick Setup
@@ -98,7 +107,7 @@ Assuming the following:
 ### Upload
 Uploading a file to a storage relay:
 
-`node index.js --upload --input bitcoin.pdf --secret-key 8c5925dc9bfd7b096a391dcb04f24923f416e06cab36c78bf4ead2f19c1fa408 --storage-nodes ws://nostr.messagepush.io:8081 --block-size-bytes 1000000 --mime-type "application/pdf" --dfilename bitcoin.pdf --descriptor-output bitcoin.pdf.map.json`
+`node index.js --upload --input bitcoin.pdf --secret-key a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e --storage-nodes ws://nostr.messagepush.io:8081 --block-size-bytes 1000000 --mime-type "application/pdf" --dfilename bitcoin.pdf --descriptor-output bitcoin.pdf.map.json`
 
 You should see the following output:
 
