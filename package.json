@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "commander": "^12.1.0",
-    "derby-tools": "file:../derby-tools",
+    "derby-tools": "^2.0.0",
     "file-type": "^22.2.0",
     "nostr-tools": "^2.10.4",
     "ws": "^8.18.0"
