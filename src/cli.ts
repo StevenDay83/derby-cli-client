@@ -24,7 +24,35 @@ program
     if (opts.ignoreSslErrors) {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
-  });
+  })
+  .addHelpText('after', `
+Examples:
+  Upload a file to two storage nodes:
+    derby upload photo.jpg --storage-key dsec1... --nodes wss://node1.example,wss://node2.example --descriptor-out photo.jpg.derby.json
+
+  Download a file from a descriptor (or a nostr address):
+    derby download photo.jpg.derby.json --output photo.jpg
+    derby download nostr:naddr1... --info
+
+  Check that every pointer still exists on its storage nodes:
+    derby check photo.jpg.derby.json
+
+  Delete the data from all listed storage nodes:
+    derby delete photo.jpg.derby.json --storage-key dsec1...
+
+  Refresh pointers (fresh timestamp), optionally re-uploading the data:
+    derby refresh photo.jpg.derby.json --storage-key dsec1... --data photo.jpg
+
+  Publish a descriptor as a nostr event:
+    derby descriptor to-event photo.jpg.derby.json --nostr-key nsec1... --publish wss://relay.damus.io
+
+  Rebuild a descriptor from a nostr event:
+    derby descriptor from-event --naddr naddr1... --descriptor-out photo.jpg.derby.json
+
+  Generate a key pair or convert a key between formats:
+    derby keys generate
+    derby keys convert nsec1...
+`);
 
 program
   .command('upload')
@@ -33,7 +61,7 @@ program
   .requiredOption('--storage-key <key>', 'secret key (nsec1..., dsec1..., or 64-char hex)')
   .requiredOption('--nodes <urls>', 'comma-separated storage node URLs (wss://a,wss://b)')
   .option('--block-size <bytes>', 'block size in bytes (min 1000)', '512000')
-  .option('--mime-type <type>', 'content MIME type')
+  .option('--mime-type <type>', 'content MIME type (auto-detected from magic numbers if omitted)')
   .option('--name <label>', 'file label stored in the descriptor')
   .option('--descriptor-out <file|stdout>', 'descriptor output path', undefined)
   .action(async (file: string, options: any) => {

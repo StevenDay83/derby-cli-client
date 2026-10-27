@@ -25,18 +25,21 @@ function allRelays(blobMap: BlobBlock[]): string[] {
   return [...relays];
 }
 
-// Builds a spec-compliant deletion pointer: same pubkey/pointerhash/size as
-// the target, a nonce in 0-9 that differs from the target's, and a fresh
-// timestamp (the relay rejects timestamps outside ±300s).
-function buildDeletionPointer(secretKey: string, block: BlobBlock, existingNonce?: number): Pointer {
+// Builds a spec-compliant deletion pointer. The relay requires: same
+// pubkey/pointerhash/size as the target; a nonce in 0-8 that differs from the
+// target's nonce; and a timestamp strictly newer than the target's and within
+// ±300s of the relay's clock.
+function buildDeletionPointer(secretKey: string, block: BlobBlock, existing?: Pointer): Pointer {
   const [, pointerHash, , size] = block;
-  let nonce = Math.floor(Math.random() * 10);
-  if (existingNonce != undefined && existingNonce >= 0 && existingNonce <= 9 && nonce === existingNonce) {
-    nonce = (nonce + 1) % 10;
+  const now = Math.floor(Date.now() / 1000);
+  let nonce = Math.floor(Math.random() * 9);
+  if (existing && existing.nonce >= 0 && existing.nonce <= 8 && nonce === existing.nonce) {
+    nonce = (nonce + 1) % 9;
   }
+  const timestamp = existing ? Math.max(now, existing.timestamp + 1) : now;
   const pointer: Pointer = {
     pubkey: getPublicKey(secretKey),
-    timestamp: Math.floor(Date.now() / 1000),
+    timestamp,
     pointerhash: pointerHash,
     size,
     nonce,
@@ -62,8 +65,9 @@ export async function deleteCommand(source: string, options: DeleteOptions): Pro
     for (const block of blobMap) {
       const [pointerId, , relayList] = block;
 
-      // Fetch the existing pointer once so the deletion nonce differs from it.
-      let existingNonce: number | undefined;
+      // Fetch the existing pointer once so the deletion nonce differs from it
+      // and the deletion timestamp is strictly newer (both relay-enforced).
+      let existing: Pointer | undefined;
       for (const relayEntry of relayList) {
         const client = pool.tryGet(relayEntry.toLowerCase());
         if (!client) {
@@ -72,7 +76,7 @@ export async function deleteCommand(source: string, options: DeleteOptions): Pro
         try {
           const found = await client.requestPointers({ ids: [pointerId] });
           if (found.length > 0) {
-            existingNonce = found[0]!.nonce;
+            existing = found[0];
           }
           break;
         } catch {
@@ -80,7 +84,7 @@ export async function deleteCommand(source: string, options: DeleteOptions): Pro
         }
       }
 
-      const deletionPointer = buildDeletionPointer(secretKey, block, existingNonce);
+      const deletionPointer = buildDeletionPointer(secretKey, block, existing);
       for (const relayEntry of relayList) {
         const relay = relayEntry.toLowerCase();
         const client = pool.tryGet(relay);

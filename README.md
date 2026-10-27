@@ -64,6 +64,11 @@ every listed storage node, then writes a data descriptor JSON (default
 `merkleRoot` spelling; legacy descriptors written with the old `merkelroot`
 misspelling still load.
 
+If `--mime-type` is omitted, the MIME type is detected from the file's magic
+numbers (via the `file-type` package, reading only the first ~4 KB); unknown
+binary data falls back to `application/octet-stream`. An explicit `--mime-type`
+always wins over detection.
+
 ```sh
 derby upload bitcoin.pdf \
   --storage-key dsec1... \
@@ -93,10 +98,10 @@ pointer that exists implies its data exists.
 ### Delete
 
 Builds a spec-compliant deletion pointer for each block — same pubkey,
-pointerhash, and size as the target; a nonce in 0–9 that differs from the
-existing pointer's nonce; a fresh timestamp — signs it, and sends
-`POINTER/DELETE` to every relay listed for the block. Per-node results are
-reported; any failure exits `2`.
+pointerhash, and size as the target; a nonce in 0–8 that differs from the
+existing pointer's nonce; a timestamp strictly newer than the existing
+pointer's — signs it, and sends `POINTER/DELETE` to every relay listed for the
+block. Per-node results are reported; any failure exits `2`.
 
 ### Refresh
 

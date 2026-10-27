@@ -275,6 +275,59 @@ describe('derby CLI end-to-end', () => {
     expect(bad.code).toBe(1);
   });
 
+  it('8. upload auto-detects the MIME type from magic numbers when --mime-type is omitted', () => {
+    // Minimal JPEG: SOI + JFIF APP0 marker is enough for file-type detection.
+    const jpegFile = path.join(tempDir, 'photo.jpg');
+    const jpeg = Buffer.alloc(2000, 0);
+    jpeg[0] = 0xff;
+    jpeg[1] = 0xd8;
+    jpeg[2] = 0xff;
+    jpeg[3] = 0xe0;
+    jpeg.write('JFIF\0', 6, 'ascii');
+    jpeg[jpeg.length - 2] = 0xff;
+    jpeg[jpeg.length - 1] = 0xd9;
+    fs.writeFileSync(jpegFile, jpeg);
+
+    const jpegDescriptor = path.join(tempDir, 'jpeg-descriptor.json');
+    const result = runCli([
+      'upload', jpegFile,
+      '--storage-key', secretKey,
+      '--nodes', RELAY_URL,
+      '--block-size', '1000',
+      '--descriptor-out', jpegDescriptor,
+    ]);
+    expect(result.stderr).toBe('');
+    expect(result.code).toBe(0);
+    expect(JSON.parse(fs.readFileSync(jpegDescriptor, 'utf8')).metadata.mimetype).toBe('image/jpeg');
+
+    // Explicit --mime-type wins over detection.
+    const overridden = path.join(tempDir, 'jpeg-descriptor-override.json');
+    const result2 = runCli([
+      'upload', jpegFile,
+      '--storage-key', secretKey,
+      '--nodes', RELAY_URL,
+      '--block-size', '1000',
+      '--mime-type', 'application/x-custom',
+      '--descriptor-out', overridden,
+    ]);
+    expect(result2.code).toBe(0);
+    expect(JSON.parse(fs.readFileSync(overridden, 'utf8')).metadata.mimetype).toBe('application/x-custom');
+
+    // Unknown binary falls back to application/octet-stream.
+    const blobFile = path.join(tempDir, 'blob.bin');
+    fs.writeFileSync(blobFile, Buffer.from(Array.from({ length: 1500 }, (_, i) => (i * 37) % 251)));
+    const blobDescriptor = path.join(tempDir, 'blob-descriptor.json');
+    const result3 = runCli([
+      'upload', blobFile,
+      '--storage-key', secretKey,
+      '--nodes', RELAY_URL,
+      '--block-size', '1000',
+      '--descriptor-out', blobDescriptor,
+    ]);
+    expect(result3.code).toBe(0);
+    expect(JSON.parse(fs.readFileSync(blobDescriptor, 'utf8')).metadata.mimetype).toBe('application/octet-stream');
+  });
+
   it('rejects an unknown secret key format on upload', () => {
     const result = runCli([
       'upload', testFile,

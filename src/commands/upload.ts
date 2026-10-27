@@ -23,6 +23,26 @@ export interface UploadOptions {
 
 const DEFAULT_BLOCK_SIZE = 512000;
 const MIN_BLOCK_SIZE = 1000;
+const SNIFF_BYTES = 4100;
+
+// file-type is pure ESM while the CLI ships CJS, so it must be loaded with a
+// runtime dynamic import (tsup preserves it as a real import() in the bundle).
+async function detectMimeType(filePath: string): Promise<string> {
+  try {
+    const { fileTypeFromBuffer } = await import('file-type');
+    const fd = fs.openSync(filePath, 'r');
+    try {
+      const head = Buffer.alloc(SNIFF_BYTES);
+      const bytesRead = fs.readSync(fd, head, 0, SNIFF_BYTES, 0);
+      const detected = await fileTypeFromBuffer(head.subarray(0, bytesRead));
+      return detected?.mime ?? 'application/octet-stream';
+    } finally {
+      fs.closeSync(fd);
+    }
+  } catch {
+    return 'application/octet-stream';
+  }
+}
 
 export async function uploadCommand(file: string, options: UploadOptions): Promise<void> {
   if (!fs.existsSync(file)) {
@@ -49,7 +69,9 @@ export async function uploadCommand(file: string, options: UploadOptions): Promi
   debug(`Broke data into ${chunks.length} chunks of up to ${blockSize} bytes`);
 
   const descriptor = new DataDescriptor();
-  descriptor.setDataMimeType(options.mimeType ?? '');
+  const mimeType = options.mimeType ?? await detectMimeType(file);
+  debug(`MIME type for ${file}: ${mimeType}${options.mimeType ? ' (--mime-type)' : ' (detected from magic numbers)'}`);
+  descriptor.setDataMimeType(mimeType);
   descriptor.setFilename(options.name ?? path.basename(file));
 
   info('Connecting to storage nodes: ' + relayURLs.join(', '));
