@@ -1,16 +1,32 @@
 {
   "name": "derby-cli",
-  "version": "0.0.1",
-  "description": "Derby File Storage command line",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "version": "1.0.0",
+  "description": "Derby File Storage command line client",
   "author": "Steven Day",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
+  "bin": {
+    "derby": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:binaries": "bun build --compile src/cli.ts --target=bun-darwin-arm64 --outfile dist/bin/derby-macos-arm64 && bun build --compile src/cli.ts --target=bun-darwin-x64 --outfile dist/bin/derby-macos-x64 && bun build --compile src/cli.ts --target=bun-linux-x64 --outfile dist/bin/derby-linux-x64 && bun build --compile src/cli.ts --target=bun-windows-x64 --outfile dist/bin/derby-windows-x64.exe",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && vitest run"
+  },
   "dependencies": {
-    "nostr-tools": "^1.17.0",
-    "websocket-polyfill": "^0.0.3",
-    "ws": "^8.14.2"
+    "commander": "^12.1.0",
+    "derby-tools": "file:../derby-tools",
+    "nostr-tools": "^2.10.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/ws": "^8.5.13",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
